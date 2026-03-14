@@ -80,6 +80,48 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Midnight Teal sidebar */
+  --sidebar-bg: #0f172a;
+  --sidebar-bg-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-bg-active: rgba(45, 212, 191, 0.15);
+  --sidebar-text: rgba(255, 255, 255, 0.55);
+  --sidebar-text-active: #ffffff;
+  --sidebar-accent: #2dd4bf;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+
+  /* Main content */
+  --main-bg: #f0fdf4;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+
+  /* Brand accent */
+  --accent: #0f766e;
+  --accent-light: #ccfbf1;
+  --accent-text: #0f766e;
+  --accent-hover: #0d9488;
+
+  /* Status colors */
+  --status-scheduled-bg: #eff6ff;
+  --status-scheduled-text: #1d4ed8;
+  --status-completed-bg: #f0fdf4;
+  --status-completed-text: #15803d;
+  --status-cancelled-bg: #fef2f2;
+  --status-cancelled-text: #dc2626;
+  --status-session-bg: #fffbeb;
+  --status-session-text: #d97706;
+  --status-waiting-bg: #faf5ff;
+  --status-waiting-text: #7c3aed;
+
+  /* PHQ severity */
+  --phq-minimal-bg: #f0fdf4;
+  --phq-minimal-text: #15803d;
+  --phq-mild-bg: #f0fdf4;
+  --phq-mild-text: #15803d;
+  --phq-moderate-bg: #fffbeb;
+  --phq-moderate-text: #d97706;
+  --phq-high-bg: #fef2f2;
+  --phq-high-text: #dc2626;
 }
 
 .dark {
@@ -114,6 +156,96 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Sidebar layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-topbar {
+  height: 52px;
+  background: white;
+  border-bottom: 0.5px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-content {
+  flex: 1;
+  padding: 24px;
+  background: var(--main-bg);
+  min-height: calc(100vh - 52px);
+}
+
+/* Teal primary button */
+.btn-teal {
+  background: #0f766e;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-teal:hover {
+  background: #0d9488;
+}
+
+/* Card */
+.surface-card {
+  background: var(--card-bg);
+  border: 0.5px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+/* Stat card sparkline area */
+.sparkline-area {
+  height: 40px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+/* Table row hover */
+.table-row-hover:hover {
+  background: #f0fdf4;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .app-sidebar {
+    display: none;
+  }
+  .app-sidebar.mobile-open {
+    display: flex;
+    position: fixed;
+    z-index: 50;
+  }
 }
 
 @layer base {

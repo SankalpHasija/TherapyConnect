@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PRACTITIONER
+  CLIENT
+  ADMIN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  WAITING
+  IN_SESSION
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum NoteType {
+  SOAP
+  PROGRESS
+  INTAKE
+  ASSESSMENT
+  TREATMENT_PLAN
+}
+
+model User {
+  id               String               @id @default(cuid())
+  name             String
+  email            String               @unique
+  password         String
+  role             Role
+  specialty        String?
+  approach         String?
+  bio              String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  clientProfiles   ClientProfile[]      @relation("PractitionerClients")
+  appointments     Appointment[]        @relation("PractitionerAppointments")
+  notes            ProgressNote[]       @relation("PractitionerNotes")
+  clientProfile    ClientProfile?       @relation("ClientUser")
+  clientAppts      Appointment[]        @relation("ClientAppointments")
+  assessments      Assessment[]
+  moodLogs         MoodLog[]
+  payments         Payment[]
+  documents        Document[]           @relation("PractitionerDocuments")
+  clientDocuments  Document[]           @relation("ClientDocuments")
+  homeworkAssigned HomeworkTask[]       @relation("PractitionerTasks")
+  homeworkTasks    HomeworkTask[]       @relation("ClientTasks")
+  achievements     Achievement[]
+  consultations    ConsultationPost[]
+  consultResponses ConsultationResponse[]
+}
+
+model ClientProfile {
+  id               String        @id @default(cuid())
+  userId           String        @unique
+  practitionerId   String
+  dateOfBirth      DateTime?
+  phone            String?
+  emergencyContact String?
+  diagnosis        String?
+  medications      String?
+  treatmentHistory String?
+  intakeComplete   Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  user             User          @relation("ClientUser", fields: [userId], references: [id])
+  practitioner     User          @relation("PractitionerClients", fields: [practitionerId], references: [id])
+  intakeForms      IntakeForm[]
+  prescriptions    Prescription[]
+}
+
+model Appointment {
+  id               String            @id @default(cuid())
+  practitionerId   String
+  clientId         String
+  datetime         DateTime
+  duration         Int               @default(50)
+  status           AppointmentStatus @default(SCHEDULED)
+  jitsiRoomUrl     String?
+  reminderSent     Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  practitioner     User              @relation("PractitionerAppointments", fields: [practitionerId], references: [id])
+  client           User              @relation("ClientAppointments", fields: [clientId], references: [id])
+  notes            ProgressNote[]
+  assessments      Assessment[]
+  payment          Payment?
+}
+
+model ProgressNote {
+  id               String      @id @default(cuid())
+  appointmentId    String
+  practitionerId   String
+  type             NoteType    @default(SOAP)
+  rawTranscript    String?
+  subjective       String?
+  objective        String?
+  assessment       String?
+  plan             String?
+  aiGenerated      Boolean     @default(false)
+  emotionAnalysis  Json?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  appointment      Appointment @relation(fields: [appointmentId], references: [id])
+  practitioner     User        @relation("PractitionerNotes", fields: [practitionerId], references: [id])
+}
+
+model IntakeForm {
+  id              String        @id @default(cuid())
+  clientProfileId String
+  answers         Json
+  submittedAt     DateTime      @default(now())
+
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id])
+}
+
+model Assessment {
+  id            String       @id @default(cuid())
+  clientId      String
+  appointmentId String?
+  type          String
+  answers       Json
+  totalScore    Int
+  severity      String
+  createdAt     DateTime     @default(now())
+
+  client        User         @relation(fields: [clientId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  clientId        String
+  appointmentId   String        @unique
+  amount          Int
+  currency        String        @default("usd")
+  stripeSessionId String?
+  status          PaymentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+
+  client          User          @relation(fields: [clientId], references: [id])
+  appointment     Appointment   @relation(fields: [appointmentId], references: [id])
+}
+
+model Prescription {
+  id              String        @id @default(cuid())
+  clientProfileId String
+  medication      String
+  dosage          String
+  frequency       String
+  startDate       DateTime
+  endDate         DateTime?
+  notes           String?
+  active          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+
+  clientProfile   ClientProfile @relation(fields: [clientProfileId], references: [id])
+}
+
+model MoodLog {
+  id       String   @id @default(cuid())
+  clientId String
+  score    Int
+  notes    String?
+  loggedAt DateTime @default(now())
+
+  client   User     @relation(fields: [clientId], references: [id])
+}
+
+model Document {
+  id               String   @id @default(cuid())
+  clientId         String
+  practitionerId   String
+  fileName         String
+  fileUrl          String
+  fileSize         Int
+  mimeType         String
+  sharedWithClient Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  client           User     @relation("ClientDocuments", fields: [clientId], references: [id])
+  practitioner     User     @relation("PractitionerDocuments", fields: [practitionerId], references: [id])
+}
+
+model HomeworkTask {
+  id             String    @id @default(cuid())
+  clientId       String
+  practitionerId String
+  title          String
+  description    String?
+  dueDate        DateTime?
+  completed      Boolean   @default(false)
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  client         User      @relation("ClientTasks", fields: [clientId], references: [id])
+  practitioner   User      @relation("PractitionerTasks", fields: [practitionerId], references: [id])
+}
+
+model Achievement {
+  id         String   @id @default(cuid())
+  clientId   String
+  type       String
+  unlockedAt DateTime @default(now())
+
+  client     User     @relation(fields: [clientId], references: [id])
+}
+
+model ConsultationPost {
+  id             String                 @id @default(cuid())
+  practitionerId String
+  title          String
+  anonymisedCase String
+  tags           String[]
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  practitioner   User                   @relation(fields: [practitionerId], references: [id])
+  responses      ConsultationResponse[]
+}
+
+model ConsultationResponse {
+  id             String           @id @default(cuid())
+  postId         String
+  practitionerId String
+  content        String
+  createdAt      DateTime         @default(now())
+
+  post           ConsultationPost @relation(fields: [postId], references: [id])
+  practitioner   User             @relation(fields: [practitionerId], references: [id])
+}
